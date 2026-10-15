@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.env
+.env.*
+!.env.example
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local configuration and credentials
+.devin/config.local.json
+credentials.json
+token.json
+*service-account*.json
+*.pem
+*.key
+
+# Generated search results and local history
+google_contacts*.csv
+!Google Contacts Import Template.csv
+tasks_history.json
+keywords_history.json
+PROGRESS.md
+*.tmp
+*.log
+
+# Editor and operating system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
