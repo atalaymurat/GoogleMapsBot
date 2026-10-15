@@ -1,0 +1,1542 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Maps Scraper - Yönetim Paneli</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .task-list {
+            margin-top: 30px;
+        }
+
+        .task-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .task-item.expanded {
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .task-details {
+            display: none;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .task-item.expanded .task-details {
+            display: block;
+        }
+
+        .task-toggle {
+            cursor: pointer;
+            color: #667eea;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .task-toggle:hover {
+            text-decoration: underline;
+        }
+
+        .task-item.pending {
+            border-left-color: #ffc107;
+        }
+
+        .task-item.running {
+            border-left-color: #007bff;
+        }
+
+        .task-item.completed {
+            border-left-color: #28a745;
+        }
+
+        .task-item.failed {
+            border-left-color: #dc3545;
+        }
+
+        .task-item.completed_with_errors {
+            border-left-color: #fd7e14;
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .task-status {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .task-status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .task-status.running {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .task-status.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .task-status.failed {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .task-status.completed_with_errors {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .download-link {
+            display: inline-block;
+            margin-top: 10px;
+            color: #4f46a5;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .progress-fill {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.3s;
+        }
+
+        .refresh-btn {
+            background: #6c757d;
+            margin-left: 10px;
+        }
+
+        .keyword-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .keyword-input input {
+            flex: 1;
+        }
+
+        .keyword-input button {
+            background: #dc3545;
+            padding: 12px 20px;
+        }
+
+        .keywords-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .keyword-tag {
+            background: #667eea;
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .districts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+
+        .districts-grid label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .districts-grid label:hover {
+            background: #e9ecef;
+        }
+
+        .districts-grid input[type="checkbox"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .history-keywords {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .history-keyword {
+            background: #6c757d;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .history-keyword:hover {
+            background: #5a6268;
+        }
+
+        body {
+            padding: 32px 24px;
+            color: #172033;
+            background: #f2f5fa;
+        }
+
+        .container {
+            max-width: 1440px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 24px;
+            padding: 24px 30px;
+            color: white;
+            background: #172033;
+            border-radius: 16px;
+            box-shadow: 0 12px 32px rgba(23, 32, 51, 0.14);
+        }
+
+        .header h1 {
+            margin-bottom: 6px;
+            color: white;
+            font-size: 26px;
+        }
+
+        .header p {
+            color: #aab5c7;
+        }
+
+        .connection-pill, .live-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+            color: #b8f3d3;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .connection-pill::before, .live-pill::before {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #35d08a;
+            content: "";
+            box-shadow: 0 0 0 4px rgba(53, 208, 138, 0.15);
+        }
+
+        .live-pill.active::before {
+            animation: live-pulse 1.4s infinite;
+        }
+
+        .dashboard-stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 16px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            padding: 20px 22px;
+            background: white;
+            border: 1px solid #e7ebf2;
+            border-radius: 14px;
+            box-shadow: 0 5px 18px rgba(24, 39, 75, 0.04);
+        }
+
+        .stat-label {
+            color: #69758a;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            display: block;
+            margin-top: 8px;
+            color: #172033;
+            font-size: 29px;
+            font-weight: 750;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: minmax(330px, 0.85fr) minmax(0, 1.5fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .card {
+            margin-bottom: 20px;
+            padding: 24px;
+            border: 1px solid #e7ebf2;
+            border-radius: 14px;
+            box-shadow: 0 5px 18px rgba(24, 39, 75, 0.045);
+        }
+
+        .card h2 {
+            margin-bottom: 18px;
+            color: #172033;
+            font-size: 19px;
+        }
+
+        .monitor-card {
+            min-height: 500px;
+        }
+
+        .monitor-section-title {
+            margin: 18px 0 9px;
+            color: #334155;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .monitor-heading, .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .monitor-heading h2, .task-header h2 {
+            margin: 0;
+        }
+
+        .monitor-query {
+            margin: 14px 0 16px;
+            padding: 12px 14px;
+            color: #47536a;
+            background: #f5f7fb;
+            border-radius: 9px;
+            font-size: 13px;
+        }
+
+        .monitor-counts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .count-chip, .ad-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 9px;
+            color: #455168;
+            background: #edf1f7;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .ad-badge.sponsored {
+            color: #8b4b08;
+            background: #fff1d6;
+        }
+
+        .live-results {
+            display: grid;
+            gap: 10px;
+            max-height: 560px;
+            overflow: auto;
+            padding-right: 4px;
+        }
+
+        .terminal-panel {
+            overflow: hidden;
+            margin: 16px 0;
+            color: #d6deeb;
+            background: #111827;
+            border: 1px solid #283449;
+            border-radius: 10px;
+            box-shadow: 0 8px 22px rgba(17, 24, 39, 0.12);
+        }
+
+        .terminal-toolbar {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 14px;
+            color: #9aa9bd;
+            background: #1b2638;
+            border-bottom: 1px solid #2a374c;
+            font: 12px Consolas, "Courier New", monospace;
+        }
+
+        .terminal-output {
+            height: 290px;
+            overflow: auto;
+            padding: 12px 14px;
+            font: 12px/1.65 Consolas, "Courier New", monospace;
+            scrollbar-color: #526078 #111827;
+        }
+
+        .terminal-line {
+            display: grid;
+            grid-template-columns: 78px 52px minmax(0, 1fr);
+            gap: 8px;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+        }
+
+        .terminal-time {
+            color: #77869b;
+        }
+
+        .terminal-level {
+            color: #7dd3fc;
+            font-weight: 700;
+        }
+
+        .terminal-line[data-level="SUCCESS"] .terminal-level {
+            color: #86efac;
+        }
+
+        .terminal-line[data-level="WARN"] .terminal-level {
+            color: #fcd34d;
+        }
+
+        .terminal-line[data-level="ERROR"] .terminal-level {
+            color: #fca5a5;
+        }
+
+        .live-result {
+            padding: 13px 14px;
+            border: 1px solid #e8edf4;
+            border-radius: 10px;
+        }
+
+        .live-result[data-status="no_mobile"],
+        .live-result[data-status="duplicate_phone"] {
+            border-left: 3px solid #d4a72c;
+        }
+
+        .live-result[data-status="saved"] {
+            border-left: 3px solid #24a06b;
+        }
+
+        .live-result-summary {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: start;
+            gap: 12px;
+        }
+
+        .live-result-category {
+            margin-top: 8px;
+            color: #35435b;
+            font-size: 12px;
+            font-weight: 650;
+        }
+
+        .category-summary-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 14px 0;
+        }
+
+        .category-summary-item {
+            padding: 8px 11px;
+            color: #35435b;
+            background: #f2f5fa;
+            border: 1px solid #e1e7f0;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .category-summary-item strong {
+            margin-left: 6px;
+            color: #172033;
+        }
+
+        .live-result details {
+            margin-top: 10px;
+            color: #566176;
+            font-size: 12px;
+        }
+
+        .live-result details summary {
+            cursor: pointer;
+            color: #455168;
+            font-weight: 650;
+        }
+
+        .live-result-source {
+            margin-top: 8px;
+            padding: 10px;
+            color: #374151;
+            background: #f6f8fb;
+            border-radius: 7px;
+            font: 12px/1.55 Consolas, "Courier New", monospace;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .live-result-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .live-result-name {
+            color: #172033;
+            font-size: 14px;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .live-result-phone {
+            display: inline-block;
+            margin-top: 7px;
+            color: #147d58;
+            font-size: 13px;
+            font-weight: 650;
+            text-decoration: none;
+        }
+
+        .live-result-query {
+            margin-top: 7px;
+            color: #8791a3;
+            font-size: 11px;
+        }
+
+        .monitor-note, .empty-state {
+            color: #768196;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .empty-state {
+            padding: 36px 18px;
+            text-align: center;
+            background: #f7f9fc;
+            border: 1px dashed #dce3ed;
+            border-radius: 10px;
+        }
+
+        .dashboard-grid button, .task-card button {
+            border-radius: 8px;
+        }
+
+        #submitBtn {
+            width: 100%;
+            padding: 14px 20px;
+            font-weight: 700;
+        }
+
+        .districts-grid {
+            max-height: 190px;
+            overflow: auto;
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+            border-width: 1px;
+        }
+
+        .districts-grid label {
+            font-size: 12px;
+        }
+
+        .task-item {
+            padding: 18px;
+            border-radius: 10px;
+        }
+
+        .task-item p {
+            margin: 6px 0;
+            color: #566176;
+            font-size: 13px;
+        }
+
+        .progress-bar {
+            height: 9px;
+            background: #e8edf4;
+        }
+
+        .progress-fill {
+            border-radius: inherit;
+        }
+
+        @keyframes result-in {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes live-pulse {
+            50% { box-shadow: 0 0 0 7px rgba(53, 208, 138, 0.08); }
+        }
+
+        @media (max-width: 900px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .monitor-card {
+                min-height: 0;
+            }
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 14px;
+            }
+
+            .header {
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 20px;
+            }
+
+            .dashboard-stats {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-value {
+                font-size: 24px;
+            }
+
+            .card {
+                padding: 18px;
+            }
+
+            .live-result-top {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div>
+                <h1>Google Maps Scraper</h1>
+                <p>İşletme aramalarınızı canlı izleyin ve sonuçları yönetin</p>
+            </div>
+            <span class="connection-pill">Panel hazır</span>
+        </header>
+
+        <section class="dashboard-stats" aria-label="Genel istatistikler">
+            <div class="stat-card"><span class="stat-label">Toplam görev</span><strong class="stat-value" id="statTasks">0</strong></div>
+            <div class="stat-card"><span class="stat-label">Çalışan görev</span><strong class="stat-value" id="statRunning">0</strong></div>
+            <div class="stat-card"><span class="stat-label">Yeni telefonlu kayıt</span><strong class="stat-value" id="statResults">0</strong></div>
+            <div class="stat-card"><span class="stat-label">Sponsorlu etiketi görülen</span><strong class="stat-value" id="statSponsored">0</strong></div>
+        </section>
+
+        <main class="dashboard-grid">
+        <section class="card task-card">
+            <h2>Yeni Görev Oluştur</h2>
+            <form id="taskForm">
+                <div class="form-group">
+                    <label for="city">Şehir</label>
+                    <select id="city" required>
+                        <option value="">Şehir seçin</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>İlçeler (Opsiyonel - Hiçbiri seçilmezse tüm ilçeler aranır)</label>
+                    <div id="districtsList" class="districts-grid"></div>
+                    <div style="margin-top: 10px;">
+                        <button type="button" onclick="selectAllDistricts()" style="background: #6c757d;">Tümünü Seç</button>
+                        <button type="button" onclick="deselectAllDistricts()" style="background: #6c757d;">Seçimi Kaldır</button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="maxResults">Maksimum Sonuç Sayısı</label>
+                    <input type="number" id="maxResults" value="50" min="10" max="100">
+                </div>
+
+                <div class="form-group">
+                    <label>Arama Kelimeleri</label>
+                    <div class="keyword-input">
+                        <input type="text" id="keywordInput" placeholder="Örn: mobilya imalat">
+                        <button type="button" onclick="addKeyword()">Ekle</button>
+                    </div>
+                    <div class="keywords-list" id="keywordsList"></div>
+                    <div style="margin-top: 15px;">
+                        <label style="font-size: 13px; color: #666;">Daha önce kullanılan kelimeler:</label>
+                        <div id="historyKeywords" class="history-keywords"></div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 9px;">
+                        <input type="checkbox" id="expandSearchQueries" checked
+                            style="width: auto; margin: 0;">
+                        Arama kelimeleri için kontrollü varyasyonlar dene
+                    </label>
+                    <p class="monitor-note">
+                        Girilen kelimeler korunur; kelime çiftleri ve mobilya sektörüne
+                        uygun ek sorgular ayrı ayrı çalıştırılır (en fazla 20 ek terim).
+                        İlçe sayısı arttıkça toplam sorgu sayısı da artar.
+                    </p>
+                </div>
+
+                <div class="form-group">
+                    <label for="outputFile">Çıktı Dosyası</label>
+                    <input type="text" id="outputFile" value="google_contacts_cumulative.csv">
+                </div>
+
+                <button type="submit" id="submitBtn">Görev Başlat</button>
+            </form>
+        </section>
+
+        <section class="card monitor-card">
+            <div class="monitor-heading">
+                <h2>Arama geri bildirimi</h2>
+                <span id="liveStatus" class="live-pill">Bekliyor</span>
+            </div>
+            <p id="monitorQuery" class="monitor-query">Henüz çalışan veya seçili bir görev yok.</p>
+            <div id="monitorCounts" class="monitor-counts"></div>
+            <div class="terminal-panel" aria-label="Canlı görev terminali">
+                <div class="terminal-toolbar">
+                    <span>GOOGLE MAPS SCRAPER / LIVE OUTPUT</span>
+                    <span id="terminalEventCount">0 olay</span>
+                </div>
+                <div id="terminalOutput" class="terminal-output" role="log" aria-live="polite">
+                    <div class="terminal-line" data-level="INFO">
+                        <span class="terminal-time">--:--:--</span>
+                        <span class="terminal-level">INFO</span>
+                        <span>Bir görev başladığında yapılan işlemler ve Maps yanıtları burada görünür.</span>
+                    </div>
+                </div>
+            </div>
+            <h3 class="monitor-section-title">Görülen işletme kartları</h3>
+            <div id="liveResults" class="live-results">
+                <div class="empty-state">Henüz işletme kartı görülmedi.</div>
+            </div>
+            <p class="monitor-note" style="margin-top: 14px;">
+                Kart metni Google Maps'te görünen metindir. Sponsor etiketi görünmezse bu,
+                sonucun kesin olarak organik olduğunu kanıtlamaz. Yalnızca yeni ve benzersiz
+                geçerli cep telefonları CSV'ye eklenir.
+            </p>
+        </section>
+        </main>
+
+        <section class="card" aria-labelledby="categorySummaryTitle">
+            <h2 id="categorySummaryTitle">Kaydedilen işletme kategori etiketleri</h2>
+            <p class="monitor-note">
+                Etiketler Maps kartında açıkça görülen kategori metninden alınır.
+                Sayılar kart gözlemidir; aynı işletme farklı sorgularda tekrar sayılabilir.
+                Önceki görevlerde kategori takibi yapılmadıysa bu veriler görünmeyebilir.
+            </p>
+            <div id="categorySummaryMeta" class="monitor-note"></div>
+            <div id="categorySummary" class="category-summary-list">
+                <div class="empty-state">Henüz kategori etiketi kaydedilmedi.</div>
+            </div>
+        </section>
+
+        <section class="card">
+            <div class="task-header">
+                <h2>Görevler</h2>
+                <button class="refresh-btn" onclick="loadTasks()">Yenile</button>
+            </div>
+            <div id="taskList" class="task-list"></div>
+        </section>
+    </div>
+
+    <script>
+        let keywords = [];
+        const expandedTaskIds = new Set();
+        let focusedTaskId = null;
+        let isLoadingTasks = false;
+        let terminalTaskId = null;
+        let liveResultsTaskId = null;
+        const terminalEventIds = new Set();
+        const taskCardElements = new Map();
+        const liveResultElements = new Map();
+
+        function escapeHtml(value) {
+            return String(value).replace(/[&<>"']/g, character => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;'
+            })[character]);
+        }
+
+        // Sayfa yüklendiğinde
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCities();
+            loadTasks();
+            loadKeywordsHistory();
+            setInterval(loadTasks, 2000);
+        });
+
+        // Şehirleri yükle
+        async function loadCities() {
+            const response = await fetch('/api/cities');
+            const data = await response.json();
+            const citySelect = document.getElementById('city');
+
+            data.cities.forEach(city => {
+                const option = document.createElement('option');
+                option.value = city;
+                option.textContent = city.charAt(0).toUpperCase() + city.slice(1);
+                citySelect.appendChild(option);
+            });
+        }
+
+        // Şehir değiştiğinde ilçeleri yükle
+        document.getElementById('city').addEventListener('change', async function() {
+            const city = this.value;
+            const districtsList = document.getElementById('districtsList');
+            districtsList.innerHTML = '';
+
+            if (city) {
+                const response = await fetch(`/api/districts/${city}`);
+                const data = await response.json();
+
+                data.districts.forEach(district => {
+                    const label = document.createElement('label');
+                    label.innerHTML = `
+                        <input type="checkbox" value="${district}" class="district-checkbox">
+                        ${district.charAt(0).toUpperCase() + district.slice(1)}
+                    `;
+                    districtsList.appendChild(label);
+                });
+            }
+        });
+
+        // Tüm ilçeleri seç
+        function selectAllDistricts() {
+            const checkboxes = document.querySelectorAll('.district-checkbox');
+            checkboxes.forEach(cb => cb.checked = true);
+        }
+
+        // İlçe seçimini kaldır
+        function deselectAllDistricts() {
+            const checkboxes = document.querySelectorAll('.district-checkbox');
+            checkboxes.forEach(cb => cb.checked = false);
+        }
+
+        // Anahtar kelime ekle
+        function addKeyword() {
+            const input = document.getElementById('keywordInput');
+            const keyword = input.value.trim();
+
+            if (keyword && !keywords.includes(keyword)) {
+                keywords.push(keyword);
+                renderKeywords();
+                input.value = '';
+            }
+        }
+
+        // Anahtar kelimeyi sil
+        function removeKeyword(keyword) {
+            keywords = keywords.filter(k => k !== keyword);
+            renderKeywords();
+        }
+
+        // Anahtar kelimeleri render et
+        function renderKeywords() {
+            const list = document.getElementById('keywordsList');
+            list.innerHTML = keywords.map(k => `
+                <span class="keyword-tag">
+                    ${escapeHtml(k)}
+                    <button type="button" data-remove-keyword="${escapeHtml(k)}"
+                        aria-label="Kelimeyi sil" style="cursor:pointer; margin-left:5px; padding:0 5px;">×</button>
+                </span>
+            `).join('');
+        }
+
+        document.getElementById('keywordsList').addEventListener('click', function(event) {
+            const button = event.target.closest('[data-remove-keyword]');
+            if (button) {
+                removeKeyword(button.dataset.removeKeyword);
+            }
+        });
+
+        // Anahtar kelime geçmişini yükle
+        async function loadKeywordsHistory() {
+            const response = await fetch('/api/keywords-history');
+            const data = await response.json();
+            const historyDiv = document.getElementById('historyKeywords');
+
+            historyDiv.innerHTML = data.keywords.map(keyword => `
+                <span class="history-keyword" data-history-keyword="${escapeHtml(keyword)}">
+                    ${escapeHtml(keyword)}
+                </span>
+            `).join('');
+        }
+
+        document.getElementById('historyKeywords').addEventListener('click', function(event) {
+            const keyword = event.target.closest('[data-history-keyword]');
+            if (keyword) {
+                addFromHistory(keyword.dataset.historyKeyword);
+            }
+        });
+
+        // Gemişten anahtar kelime ekle
+        function addFromHistory(keyword) {
+            if (!keywords.includes(keyword)) {
+                keywords.push(keyword);
+                renderKeywords();
+            }
+        }
+
+        // Form submit
+        document.getElementById('taskForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            if (keywords.length === 0) {
+                alert('En az bir arama kelimesi girin');
+                return;
+            }
+
+            const city = document.getElementById('city').value;
+            const maxResults = document.getElementById('maxResults').value;
+            const outputFile = document.getElementById('outputFile').value;
+
+            // Seçili ilçeleri al
+            const selectedDistricts = [];
+            document.querySelectorAll('.district-checkbox:checked').forEach(cb => {
+                selectedDistricts.push(cb.value);
+            });
+
+            const data = {
+                city: city,
+                search_keywords: keywords,
+                expand_search_queries: document.getElementById('expandSearchQueries').checked,
+                max_results: parseInt(maxResults),
+                cumulative_file: outputFile
+            };
+
+            // Eğer ilçe seçildiyse, sadece seçili ilçeleri ara
+            if (selectedDistricts.length > 0) {
+                data.districts = selectedDistricts;
+            }
+
+            const response = await fetch('/api/tasks', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                focusedTaskId = result.task_id;
+                keywords = [];
+                renderKeywords();
+                const submitButton = document.getElementById('submitBtn');
+                submitButton.textContent = 'Görev oluşturuldu';
+                window.setTimeout(() => {
+                    submitButton.textContent = 'Görev Başlat';
+                }, 1800);
+                loadTasks();
+            } else {
+                alert('Hata: ' + result.error);
+            }
+        });
+
+        // Görevleri yükle
+        async function loadTasks() {
+            if (isLoadingTasks) return;
+            isLoadingTasks = true;
+
+            try {
+                const response = await fetch('/api/tasks');
+                if (!response.ok) {
+                    throw new Error('Görev listesi alınamadı');
+                }
+                const tasks = await response.json();
+                updateDashboard(tasks);
+
+                renderTaskList(tasks);
+            } catch (error) {
+                document.getElementById('liveStatus').textContent = 'Bağlantı sorunu';
+                console.error(error);
+            } finally {
+                isLoadingTasks = false;
+            }
+        }
+
+        function renderCategorySummary(tasks) {
+            const container = document.getElementById('categorySummary');
+            const meta = document.getElementById('categorySummaryMeta');
+            const categoryCounts = new Map();
+            let uncategorizedCount = 0;
+
+            for (const task of tasks) {
+                uncategorizedCount += task.uncategorized_category_count || 0;
+                for (const [label, count] of Object.entries(task.category_counts || {})) {
+                    const normalizedLabel = label.trim()
+                        .toLocaleLowerCase('tr-TR')
+                        .replaceAll('ı', 'i')
+                        .normalize('NFKD')
+                        .replace(/\p{Diacritic}/gu, '');
+                    const existing = categoryCounts.get(normalizedLabel);
+                    categoryCounts.set(
+                        normalizedLabel,
+                        {
+                            label: existing ? existing.label : label,
+                            count: (existing ? existing.count : 0) + count
+                        }
+                    );
+                }
+            }
+
+            const sortedCategories = [...categoryCounts.values()]
+                .sort((left, right) =>
+                    right.count - left.count ||
+                    left.label.localeCompare(right.label, 'tr')
+                );
+            const labeledObservations = sortedCategories.reduce(
+                (total, category) => total + category.count, 0
+            );
+            setTextIfChanged(
+                meta,
+                `Etiketli kart gözlemi: ${labeledObservations} · ` +
+                `Kategori etiketi alınamayan: ${uncategorizedCount}`
+            );
+
+            container.replaceChildren();
+            if (!sortedCategories.length) {
+                container.appendChild(Object.assign(document.createElement('div'), {
+                    className: 'empty-state',
+                    textContent: 'Henüz kategori etiketi kaydedilmedi.'
+                }));
+                return;
+            }
+            for (const {label, count} of sortedCategories) {
+                const item = document.createElement('div');
+                item.className = 'category-summary-item';
+                item.append(
+                    document.createTextNode(label),
+                    Object.assign(document.createElement('strong'), {
+                        textContent: String(count)
+                    })
+                );
+                container.appendChild(item);
+            }
+        }
+
+        function updateDashboard(tasks) {
+            document.getElementById('statTasks').textContent = tasks.length;
+            document.getElementById('statRunning').textContent =
+                tasks.filter(task => task.status === 'running').length;
+            document.getElementById('statResults').textContent =
+                tasks.reduce((total, task) => total + (task.live_result_count || 0), 0);
+            document.getElementById('statSponsored').textContent =
+                tasks.reduce((total, task) => total + (task.sponsored_count || 0), 0);
+            renderCategorySummary(tasks);
+
+            const activeTask = tasks.find(task =>
+                task.id === focusedTaskId && task.status === 'running'
+            ) || tasks.slice().reverse().find(task => task.status === 'running')
+                || tasks.find(task => task.id === focusedTaskId)
+                || tasks[tasks.length - 1];
+
+            const liveStatus = document.getElementById('liveStatus');
+            const monitorQuery = document.getElementById('monitorQuery');
+            const monitorCounts = document.getElementById('monitorCounts');
+
+            if (!activeTask) {
+                liveStatus.textContent = 'Bekliyor';
+                liveStatus.classList.remove('active');
+                monitorQuery.textContent = 'Henüz çalışan veya seçili bir görev yok.';
+                updateMonitorCounts({});
+                renderTerminal(null);
+                renderLiveResults(null, []);
+                return;
+            }
+
+            const isRunning = activeTask.status === 'running';
+            liveStatus.textContent = isRunning ? 'Canlı izleniyor' : 'Son görev';
+            liveStatus.classList.toggle('active', isRunning);
+            monitorQuery.textContent = activeTask.current_search
+                ? `Şu an aranıyor: ${activeTask.current_search}`
+                : `${activeTask.data.city} · ${activeTask.data.search_keywords.join(', ')}`;
+            updateMonitorCounts(activeTask);
+            renderTerminal(activeTask);
+            renderLiveResults(activeTask.id, activeTask.live_results || []);
+        }
+
+        function setTextIfChanged(element, value) {
+            const text = value === undefined || value === null ? '' : String(value);
+            if (element.textContent !== text) element.textContent = text;
+        }
+
+        function createTaskCard() {
+            const root = document.createElement('article');
+            root.className = 'task-item';
+            const header = document.createElement('div');
+            header.className = 'task-header';
+            const status = document.createElement('span');
+            status.className = 'task-status';
+            const created = document.createElement('small');
+            header.append(status, created);
+
+            const city = document.createElement('p');
+            const keywords = document.createElement('p');
+            const queryPlan = document.createElement('p');
+            const districts = document.createElement('p');
+            const toggle = document.createElement('button');
+            toggle.type = 'button';
+            toggle.className = 'task-toggle';
+            toggle.addEventListener('click', () => {
+                if (expandedTaskIds.has(root.dataset.taskId)) {
+                    expandedTaskIds.delete(root.dataset.taskId);
+                } else {
+                    expandedTaskIds.add(root.dataset.taskId);
+                }
+                root.classList.toggle('expanded', expandedTaskIds.has(root.dataset.taskId));
+                setTextIfChanged(
+                    toggle,
+                    expandedTaskIds.has(root.dataset.taskId) ? 'Detayları gizle' : 'Detayları göster'
+                );
+            });
+
+            const details = document.createElement('div');
+            details.className = 'task-details';
+            const summary = document.createElement('p');
+            const current = document.createElement('p');
+            const total = document.createElement('p');
+            const last = document.createElement('p');
+            const error = document.createElement('p');
+            error.style.color = '#b42318';
+            const progress = document.createElement('div');
+            progress.className = 'progress-bar';
+            const progressFill = document.createElement('div');
+            progressFill.className = 'progress-fill';
+            progress.appendChild(progressFill);
+            const progressText = document.createElement('p');
+            const download = document.createElement('a');
+            download.className = 'download-link';
+            download.textContent = 'CSV dosyasını indir';
+            details.append(
+                queryPlan, summary, current, total, last, error, progress,
+                progressText, download
+            );
+            root.append(header, city, keywords, districts, toggle, details);
+            return {
+                root, status, created, city, keywords, queryPlan, districts, toggle,
+                summary, current, total, last, error, progress, progressFill,
+                progressText, download
+            };
+        }
+
+        function renderTaskList(tasks) {
+            const taskList = document.getElementById('taskList');
+            if (tasks.length === 0) {
+                if (!taskList.querySelector('.empty-state')) {
+                    taskCardElements.clear();
+                    taskList.replaceChildren(Object.assign(document.createElement('p'), {
+                        className: 'empty-state',
+                        textContent: 'Henüz görev yok.'
+                    }));
+                }
+                return;
+            }
+
+            const emptyState = taskList.querySelector('.empty-state');
+            if (emptyState) emptyState.remove();
+
+            const activeIds = new Set(tasks.map(task => task.id));
+            for (const [taskId, card] of taskCardElements) {
+                if (!activeIds.has(taskId)) {
+                    card.root.remove();
+                    taskCardElements.delete(taskId);
+                }
+            }
+
+            for (const task of tasks.slice().reverse()) {
+                let card = taskCardElements.get(task.id);
+                if (!card) {
+                    card = createTaskCard();
+                    card.root.dataset.taskId = task.id;
+                    taskCardElements.set(task.id, card);
+                    taskList.prepend(card.root);
+                }
+                updateTaskCard(card, task);
+            }
+        }
+
+        function updateTaskCard(card, task) {
+            const taskId = task.id;
+            const isCompleted = ['completed', 'completed_with_errors', 'failed'].includes(task.status);
+            card.root.className = `task-item ${task.status}${expandedTaskIds.has(taskId) ? ' expanded' : ''}`;
+            card.status.className = `task-status ${task.status}`;
+            setTextIfChanged(card.status, task.status);
+            setTextIfChanged(card.created, new Date(task.created_at).toLocaleString('tr-TR'));
+            setTextIfChanged(card.city, `Şehir: ${task.data.city}`);
+            setTextIfChanged(card.keywords, `Arama: ${task.data.search_keywords.join(', ')}`);
+            const searchQueries = task.data.search_queries || task.data.search_keywords;
+            const generatedQueries = searchQueries.filter(query =>
+                !task.data.search_keywords.some(keyword =>
+                    keyword.toLocaleLowerCase('tr-TR') === query.toLocaleLowerCase('tr-TR')
+                )
+            );
+            setTextIfChanged(
+                card.queryPlan,
+                `Sorgu planı (${searchQueries.length} terim): ${searchQueries.join(' · ')}`
+            );
+            card.queryPlan.hidden = generatedQueries.length === 0;
+            const districtText = task.data.districts === null || task.data.districts === undefined
+                ? ''
+                : `İlçeler: ${task.data.districts.length ? task.data.districts.join(', ') : 'Tüm ilçeler'}`;
+            setTextIfChanged(card.districts, districtText);
+            card.districts.hidden = !districtText;
+            card.toggle.hidden = !isCompleted;
+            setTextIfChanged(
+                card.toggle,
+                expandedTaskIds.has(taskId) ? 'Detayları gizle' : 'Detayları göster'
+            );
+            setTextIfChanged(card.summary, `Maksimum: ${task.data.max_results || '-'}`);
+            setTextIfChanged(card.current, task.current_search ? `Aranıyor: ${task.current_search}` : '');
+            setTextIfChanged(card.total, `Toplam yeni telefonlu kayıt: ${task.live_result_count || 0}`);
+            setTextIfChanged(card.last, task.last_result ? `Son sorgu: ${task.last_result}` : '');
+            setTextIfChanged(card.error, task.error ? `Hata: ${task.error}` : '');
+            card.error.hidden = !task.error;
+            const progress = task.total_searches
+                ? Math.round((task.completed_searches || 0) / task.total_searches * 100)
+                : 0;
+            card.progress.hidden = task.status !== 'running';
+            card.progressFill.style.width = `${progress}%`;
+            setTextIfChanged(
+                card.progressText,
+                task.status === 'running'
+                    ? `${task.completed_searches || 0}/${task.total_searches} sorgu tamamlandı (${progress}%)`
+                    : ''
+            );
+            card.download.hidden = !isCompleted;
+            card.download.href = `/api/export?filename=${encodeURIComponent(
+                task.data.cumulative_file || 'google_contacts_cumulative.csv'
+            )}`;
+        }
+
+        function updateMonitorCounts(task) {
+            const monitorCounts = document.getElementById('monitorCounts');
+            if (!monitorCounts.childElementCount) {
+                for (const [key, label] of [
+                    ['observed', 'Kart görüldü'],
+                    ['saved', 'Yeni kayıt'],
+                    ['duplicate', 'Tekrar telefon'],
+                    ['noPhone', 'Cep telefonu yok'],
+                    ['sponsored', 'Sponsorlu etiketi'],
+                    ['progress', 'Sorgu']
+                ]) {
+                    const chip = document.createElement('span');
+                    chip.className = 'count-chip';
+                    chip.dataset.counter = key;
+                    chip.dataset.label = label;
+                    monitorCounts.appendChild(chip);
+                }
+            }
+            const values = {
+                observed: task.observed_count || 0,
+                saved: task.live_result_count || 0,
+                duplicate: task.duplicate_phone_count || 0,
+                noPhone: task.no_mobile_count || 0,
+                sponsored: task.sponsored_count || 0,
+                progress: `${task.completed_searches || 0}/${task.total_searches || 0}`
+            };
+            for (const chip of monitorCounts.children) {
+                const key = chip.dataset.counter;
+                setTextIfChanged(chip, `${chip.dataset.label}: ${values[key]}`);
+            }
+        }
+
+        function renderTerminal(task) {
+            const output = document.getElementById('terminalOutput');
+            const eventCount = document.getElementById('terminalEventCount');
+            const taskId = task ? task.id : null;
+            if (terminalTaskId !== taskId) {
+                terminalTaskId = taskId;
+                terminalEventIds.clear();
+                output.replaceChildren();
+            }
+            const events = task ? (task.terminal_events || []) : [];
+            const nearBottom = output.scrollHeight - output.scrollTop - output.clientHeight < 40;
+            for (const event of events) {
+                if (terminalEventIds.has(event.id)) continue;
+                terminalEventIds.add(event.id);
+                const line = document.createElement('div');
+                line.className = 'terminal-line';
+                line.dataset.level = event.level || 'INFO';
+                const timestamp = new Date(event.timestamp);
+                const timeText = Number.isNaN(timestamp.getTime())
+                    ? '--:--:--'
+                    : timestamp.toLocaleTimeString('tr-TR');
+                const time = document.createElement('span');
+                time.className = 'terminal-time';
+                time.textContent = timeText;
+                const level = document.createElement('span');
+                level.className = 'terminal-level';
+                level.textContent = event.level || 'INFO';
+                const message = document.createElement('span');
+                message.textContent = event.message || '';
+                line.append(time, level, message);
+                output.appendChild(line);
+                while (output.children.length > 250) {
+                    output.firstElementChild.remove();
+                }
+            }
+            const totalEvents = task
+                ? (task.terminal_event_count || events.length)
+                : 0;
+            setTextIfChanged(
+                eventCount,
+                `${totalEvents} olay · son ${events.length} satır`
+            );
+            if (nearBottom) output.scrollTop = output.scrollHeight;
+        }
+
+        function renderLiveResults(taskId, results) {
+            const container = document.getElementById('liveResults');
+            if (liveResultsTaskId !== taskId) {
+                liveResultsTaskId = taskId;
+                liveResultElements.clear();
+                container.replaceChildren();
+            }
+            if (!results.length) {
+                if (!container.querySelector('.empty-state')) {
+                    container.replaceChildren(Object.assign(document.createElement('div'), {
+                        className: 'empty-state',
+                        textContent: 'Henüz işletme kartı görülmedi.'
+                    }));
+                }
+                return;
+            }
+
+            const ids = new Set(results.map((result, index) =>
+                result.observation_id || `${result.search_query}-${result.name}-${index}`
+            ));
+            for (const [id, element] of liveResultElements) {
+                if (!ids.has(id)) {
+                    element.remove();
+                    liveResultElements.delete(id);
+                }
+            }
+            for (const [index, result] of results.entries()) {
+                const id = result.observation_id || `${result.search_query}-${result.name}-${index}`;
+                let card = liveResultElements.get(id);
+                if (!card) {
+                    card = createLiveResultCard();
+                    liveResultElements.set(id, card);
+                    container.prepend(card.root);
+                }
+                updateLiveResultCard(card, result);
+            }
+        }
+
+        function createLiveResultCard() {
+            const root = document.createElement('article');
+            root.className = 'live-result';
+            const summary = document.createElement('div');
+            summary.className = 'live-result-summary';
+            const name = document.createElement('div');
+            name.className = 'live-result-name';
+            const status = document.createElement('span');
+            status.className = 'count-chip';
+            const category = document.createElement('div');
+            category.className = 'live-result-category';
+            summary.append(name, status);
+            const phone = document.createElement('a');
+            phone.className = 'live-result-phone';
+            const query = document.createElement('div');
+            query.className = 'live-result-query';
+            const details = document.createElement('details');
+            const detailsSummary = document.createElement('summary');
+            detailsSummary.textContent = 'Google Maps kart metnini göster';
+            const source = document.createElement('pre');
+            source.className = 'live-result-source';
+            const placeLink = document.createElement('a');
+            placeLink.className = 'download-link';
+            placeLink.target = '_blank';
+            placeLink.rel = 'noopener noreferrer';
+            placeLink.textContent = 'Google Maps kaydını aç';
+            details.append(detailsSummary, source, placeLink);
+            root.append(summary, category, phone, query, details);
+            return {
+                root, name, status, category, phone, query, details, source, placeLink
+            };
+        }
+
+        function updateLiveResultCard(card, result) {
+            const statusLabels = {
+                saved: 'CSV’ye eklendi',
+                no_mobile: 'Cep telefonu bulunamadı',
+                duplicate_phone: 'Telefon zaten kayıtlı',
+                limit_reached: 'Sonuç limiti doldu'
+            };
+            card.root.dataset.status = result.collection_status || '';
+            setTextIfChanged(card.name, result.name);
+            setTextIfChanged(
+                card.status,
+                statusLabels[result.collection_status] || result.collection_status || 'Görüldü'
+            );
+            setTextIfChanged(
+                card.category,
+                result.category_label
+                    ? `Kategori etiketi: ${result.category_label}`
+                    : 'Kategori etiketi alınamadı'
+            );
+            setTextIfChanged(card.phone, result.phone || 'Telefon yok');
+            if (result.phone) {
+                card.phone.href = `tel:${result.phone}`;
+                card.phone.removeAttribute('aria-disabled');
+            } else {
+                card.phone.removeAttribute('href');
+                card.phone.setAttribute('aria-disabled', 'true');
+            }
+            setTextIfChanged(
+                card.query,
+                `${result.search_query || ''}${result.sponsored ? ' · Sponsorlu etiketi algılandı' : ''}`
+            );
+            setTextIfChanged(card.source, result.card_text || '(Kart metni alınamadı)');
+            let placeUrl = null;
+            try {
+                const candidate = new URL(result.place_url);
+                if (candidate.protocol === 'https:' &&
+                        ['www.google.com', 'maps.google.com'].includes(candidate.hostname)) {
+                    placeUrl = candidate.href;
+                }
+            } catch (error) {
+                placeUrl = null;
+            }
+            card.placeLink.hidden = !placeUrl;
+            if (placeUrl) card.placeLink.href = placeUrl;
+        }
+
+    </script>
+</body>
+</html>
