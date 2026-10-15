@@ -17,30 +17,101 @@ Google Maps üzerinde işletme arayıp iletişim bilgilerini Google Contacts for
 - ✅ **Gerçek zamanlı ilerleme takibi**
 - ✅ **Canlı sonuç akışı ve sponsorlu etiketi gözlemi**
 
-## Kurulum
+## Kurulum ve çalıştırma
 
-```bash
-# Bağımlılıkları yükle
-python -m pip install -r requirements.txt
+Aşağıdaki adımlar Windows PowerShell içindir. Bilgisayarınızda Python 3 ve
+Google Chrome kurulu olmalıdır. İlk aramada Selenium, Chrome için gereken
+WebDriver'ı internet üzerinden otomatik indirir.
 
-# Odaklı testleri çalıştır
-python -m unittest discover -s tests -v
+### 1. Projeyi bilgisayarınıza alın
+
+Git kuruluysa PowerShell'de:
+
+```powershell
+git clone https://github.com/atalaymurat/GoogleMapsBot.git
+cd GoogleMapsBot
 ```
 
-## Kullanım
+Alternatif olarak GitHub deposundaki **Code > Download ZIP** seçeneğiyle
+projeyi indirip ZIP dosyasını çıkartın; ardından PowerShell'de proje klasörüne
+geçin.
 
-### Web Paneli (Önerilen)
+### 2. Python kurulumunu kontrol edin
 
-```bash
-# Web panelini başlat
-python app.py
+```powershell
+py --version
 ```
 
-Tarayıcıda http://127.0.0.1:5000 adresini açın. Windows'ta başlatma sırasında
-5000 portunda çalışan bu projeye ait eski `app.py` örneği varsa kapatılıp yenisi
-başlatılır. Portu başka bir uygulama kullanıyorsa o uygulama kapatılmaz ve
-başlatma açık bir hata mesajıyla durur. Eski örnekte çalışan bir görev varsa
-yeniden başlatma görevi kesebilir.
+Python sürüm numarası görüntülenmelidir. `py` komutu bulunamazsa Python 3'ü
+kurup terminali yeniden açın.
+
+### 3. Sanal ortam oluşturup etkinleştirin
+
+```powershell
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+```
+
+Etkinleştirme engellenirse yalnızca mevcut PowerShell oturumu için şu komutu
+çalıştırıp 3. adımdaki etkinleştirme komutunu yeniden deneyin:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+
+### 4. Gerekli paketleri yükleyin
+
+```powershell
+py -m pip install -r requirements.txt
+```
+
+### 5. Web panelini başlatın
+
+```powershell
+py app.py
+```
+
+Terminal penceresini açık bırakın ve tarayıcıda
+http://127.0.0.1:5000 adresini açın. Uygulama yalnızca bu bilgisayarda
+erişilebilir şekilde çalışır.
+
+### 6. Arama görevi oluşturun
+
+Panelden şehir seçin, isterseniz ilçeleri belirleyin ve bir veya daha fazla
+arama kelimesi girin. Sonuç sayısını ve çıktı CSV dosyasının adını seçip görevi
+başlatın. Görev ilerlemesini panelden takip edebilirsiniz. İlk çalıştırmada
+Chrome/WebDriver başlatılır; tarama sırasında internet bağlantısı gereklidir.
+Sonuçlar proje klasöründeki seçtiğiniz CSV dosyasına kaydedilir (varsayılan:
+`google_contacts_cumulative.csv`). Panelden CSV'yi indirebilirsiniz.
+
+### 7. Uygulamayı durdurun
+
+Çalıştırıldığı PowerShell penceresine dönüp `Ctrl+C` tuşlarına basın. Daha sonra
+yeniden başlatmak için proje klasöründe sanal ortamı etkinleştirip
+`py app.py` komutunu çalıştırın.
+
+> Not: 5000 portu başka bir uygulama tarafından kullanılıyorsa uygulama açık
+> hata vererek başlatılmaz; o uygulamayı kapatıp tekrar deneyin. 5000 portunda
+> çalışan bu projeye ait eski `app.py` örneği başlatma sırasında kapatılıp
+> yenisi çalıştırılır; eski örnekte devam eden bir görev kesilebilir.
+
+Testleri çalıştırmak için proje klasöründe:
+
+```powershell
+py -m unittest discover -s tests -v
+```
+
+### Komut satırından çalıştırma (isteğe bağlı)
+
+Web paneli yerine:
+
+```powershell
+py main.py
+```
+
+Arama kelimelerini `main.py` dosyasından düzenleyebilirsiniz.
+
+## Kullanım ayrıntıları
 
 **Web Paneli Özellikleri:**
 - Şehir seçimi (İstanbul, Ankara, İzmir vb.)
