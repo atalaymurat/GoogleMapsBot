@@ -81,8 +81,10 @@ Panelden şehir seçin, isterseniz ilçeleri belirleyin ve bir veya daha fazla
 arama kelimesi girin. Sonuç sayısını ve çıktı CSV dosyasının adını seçip görevi
 başlatın. Görev ilerlemesini panelden takip edebilirsiniz. İlk çalıştırmada
 Chrome/WebDriver başlatılır; tarama sırasında internet bağlantısı gereklidir.
-Sonuçlar proje klasöründeki seçtiğiniz CSV dosyasına kaydedilir (varsayılan:
-`google_contacts_cumulative.csv`). Panelden CSV'yi indirebilirsiniz.
+Görev geçmişi ve CSV dosyaları Windows'ta
+`%LOCALAPPDATA%\GoogleMapsBot` klasörüne kaydedilir. İlk açılışta proje
+klasöründeki görev geçmişi, anahtar kelime geçmişi ve varsayılan kümülatif CSV
+bu konuma kopyalanır; panelden CSV'yi indirebilirsiniz.
 
 ### 7. Uygulamayı durdurun
 

@@ -147,36 +147,32 @@ class TaskApiTests(unittest.TestCase):
                 )
 
     def test_export_sends_csv_as_attachment_and_rejects_paths(self):
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".csv", prefix="export_test_", dir=os.getcwd(),
-            encoding="utf-8", delete=False
-        ) as file:
-            file.write("Name,Phone\n")
-            filename = os.path.basename(file.name)
-        response = None
-        try:
-            response = self.client.get(
-                "/api/export", query_string={"filename": filename}
-            )
-            self.assertEqual(response.status_code, 200)
-            self.assertIn("attachment", response.headers["Content-Disposition"])
-            self.assertEqual(response.data, b"Name,Phone\r\n")
-            self.assertEqual(
-                self.client.get(
-                    "/api/export", query_string={"filename": "..\\secret.csv"}
-                ).status_code,
-                400
-            )
-            self.assertEqual(
-                self.client.get(
-                    "/api/export", query_string={"filename": "C:secret.csv"}
-                ).status_code,
-                400
-            )
-        finally:
-            if response is not None:
+        with tempfile.TemporaryDirectory() as directory:
+            filename = "export_test.csv"
+            with open(
+                os.path.join(directory, filename), "w", encoding="utf-8"
+            ) as file:
+                file.write("Name,Phone\n")
+            with patch.object(app_module, "APP_DATA_DIR", directory):
+                response = self.client.get(
+                    "/api/export", query_string={"filename": filename}
+                )
+                self.assertEqual(response.status_code, 200)
+                self.assertIn("attachment", response.headers["Content-Disposition"])
+                self.assertEqual(response.data, b"Name,Phone\r\n")
                 response.close()
-            os.unlink(file.name)
+                self.assertEqual(
+                    self.client.get(
+                        "/api/export", query_string={"filename": "..\\secret.csv"}
+                    ).status_code,
+                    400
+                )
+                self.assertEqual(
+                    self.client.get(
+                        "/api/export", query_string={"filename": "C:secret.csv"}
+                    ).status_code,
+                    400
+                )
 
     def test_task_apis_include_live_result_snapshot(self):
         app_module.tasks["task_live"] = {

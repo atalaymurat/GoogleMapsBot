@@ -6,6 +6,7 @@ import os
 import json
 import logging
 import platform
+import shutil
 import subprocess
 import urllib.request
 from datetime import datetime
@@ -15,12 +16,25 @@ from scraper import normalize_location_key
 app = Flask(__name__, template_folder='templates')
 logger = logging.getLogger(__name__)
 state_lock = threading.RLock()
+APP_DIR = os.path.dirname(os.path.abspath(__file__))
+APP_DATA_DIR = os.path.join(
+    os.environ.get('LOCALAPPDATA', APP_DIR), 'GoogleMapsBot'
+)
+os.makedirs(APP_DATA_DIR, exist_ok=True)
+
+for data_filename in ('keywords_history.json', 'tasks_history.json',
+                      'google_contacts_cumulative.csv'):
+    source_path = os.path.join(APP_DIR, data_filename)
+    destination_path = os.path.join(APP_DATA_DIR, data_filename)
+    if (APP_DATA_DIR != APP_DIR and os.path.isfile(source_path)
+            and not os.path.exists(destination_path)):
+        shutil.copy2(source_path, destination_path)
 
 # Anahtar kelime geçmişi dosyası
-KEYWORDS_FILE = 'keywords_history.json'
+KEYWORDS_FILE = os.path.join(APP_DATA_DIR, 'keywords_history.json')
 
 # Görev geçmişi dosyası
-TASKS_FILE = 'tasks_history.json'
+TASKS_FILE = os.path.join(APP_DATA_DIR, 'tasks_history.json')
 
 def load_tasks_history():
     """Görev geçmişini yükle"""
@@ -269,7 +283,14 @@ def task_worker():
             search_keywords = task_data.get(
                 'search_queries', task_data['search_keywords']
             )
-            cumulative_file = task_data.get('cumulative_file', 'google_contacts_cumulative.csv')
+            cumulative_filename = task_data.get(
+                'cumulative_file', 'google_contacts_cumulative.csv'
+            )
+            if (not isinstance(cumulative_filename, str)
+                    or cumulative_filename != os.path.basename(cumulative_filename)
+                    or not cumulative_filename.lower().endswith('.csv')):
+                raise ValueError("Görev geçmişinde geçersiz CSV dosya adı")
+            cumulative_file = os.path.join(APP_DATA_DIR, cumulative_filename)
             max_results = task_data.get('max_results', 50)
             generated_queries = [
                 query for query in search_keywords
@@ -579,9 +600,6 @@ def create_task():
             for district in districts
         ))
 
-    with state_lock:
-        task_counter += 1
-        task_id = f"task_{task_counter}"
     task_data = {
         'city': city,
         'search_keywords': search_keywords,
@@ -592,15 +610,28 @@ def create_task():
         'districts': districts
     }
 
-    with state_lock:
-        tasks[task_id] = {
-            'id': task_id,
-            'status': 'pending',
-            'created_at': datetime.now().isoformat(),
-            'data': task_data
-        }
-    save_keywords_history(search_keywords)
-    save_tasks_history()
+    task_id = None
+    try:
+        save_keywords_history(search_keywords)
+        with state_lock:
+            task_counter += 1
+            task_id = f"task_{task_counter}"
+            tasks[task_id] = {
+                'id': task_id,
+                'status': 'pending',
+                'created_at': datetime.now().isoformat(),
+                'data': task_data
+            }
+        save_tasks_history()
+    except (OSError, ValueError) as error:
+        if task_id is not None:
+            with state_lock:
+                tasks.pop(task_id, None)
+        logger.exception("Yeni görev kaydedilemedi")
+        return jsonify({
+            'error': f"Görev dosyaya kaydedilemedi: {error}"
+        }), 500
+
     task_queue.put((task_id, task_data))
 
     return jsonify({
@@ -692,11 +723,12 @@ def export_csv():
             or ':' in filename
             or not filename.lower().endswith('.csv')):
         return jsonify({'error': 'Yalnızca geçerli bir CSV dosya adı indirilebilir'}), 400
-    if not os.path.isfile(filename):
+    file_path = os.path.join(APP_DATA_DIR, filename)
+    if not os.path.isfile(file_path):
         return jsonify({'error': 'Dosya bulunamadı'}), 404
 
     return send_file(
-        os.path.abspath(filename),
+        file_path,
         mimetype='text/csv',
         as_attachment=True,
         download_name=filename
