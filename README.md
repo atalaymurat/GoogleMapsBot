@@ -87,12 +87,13 @@ erişilebilir şekilde çalışır.
 
 Panelden şehir seçin, isterseniz ilçeleri belirleyin ve bir veya daha fazla
 arama kelimesi girin. Sonuç sayısını ve çıktı CSV dosyasının adını seçip görevi
-başlatın. Görev ilerlemesini panelden takip edebilirsiniz. İlk çalıştırmada
-Chrome/WebDriver başlatılır; tarama sırasında internet bağlantısı gereklidir.
-Görev geçmişi ve CSV dosyaları Windows'ta
-`%LOCALAPPDATA%\GoogleMapsBot` klasörüne kaydedilir. İlk açılışta proje
-klasöründeki görev geçmişi, anahtar kelime geçmişi ve varsayılan kümülatif CSV
-bu konuma kopyalanır; panelden CSV'yi indirebilirsiniz.
+başlatın. Görev ilerlemesini panelden takip edebilirsiniz. Google Chrome veya
+Chromium tarayıcısı bilgisayarda kurulu olmalıdır; WebDriver otomatik hazırlanır.
+Tarayıcı bulunamazsa görev hata durumuna geçer ve panelde Chrome indirme bağlantısı
+gösterilir; web uygulaması açık kalır. [Google Chrome'u indirin](https://www.google.com/chrome/),
+kurulumu tamamlayın ve aramayı panelden yeniden başlatın. İlk taramada WebDriver'ın
+indirilmesi için internet bağlantısı gerekir. Görev geçmişi ve CSV dosyaları proje
+klasöründe tutulur; panelden CSV'yi indirebilirsiniz.
 
 ### 7. Uygulamayı durdurun
 

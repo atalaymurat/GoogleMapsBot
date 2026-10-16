@@ -12,7 +12,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import TimeoutException, WebDriverException
 from webdriver_manager.chrome import ChromeDriverManager
 
 
@@ -162,7 +162,8 @@ class GoogleMapsScraper:
         city: str = None,
         region: str = None,
         on_result=None,
-        on_event=None
+        on_event=None,
+        excluded_category_labels=None
     ):
         self.search_query = search_query
         self.max_results = max_results
@@ -177,6 +178,10 @@ class GoogleMapsScraper:
         self.region = region.capitalize() if region is not None else parsed_location[1]
         self.on_result = on_result
         self.on_event = on_event
+        self.excluded_category_labels = {
+            normalize_location_key(label)
+            for label in (excluded_category_labels or [])
+        }
         self.observed_keys = set()
         self.existing_phones = self.load_existing_phones()
 
@@ -231,8 +236,25 @@ class GoogleMapsScraper:
         chrome_options.add_argument("--disable-dev-shm-usage")
 
         # Tarayıcıyı başlat (webdriver-manager ile otomatik driver yükleme)
-        service = Service(ChromeDriverManager().install())
-        driver = webdriver.Chrome(service=service, options=chrome_options)
+        try:
+            service = Service(ChromeDriverManager().install())
+            driver = webdriver.Chrome(service=service, options=chrome_options)
+        except WebDriverException as error:
+            details = str(error)
+            lowered_details = details.casefold()
+            if any(marker in lowered_details for marker in (
+                'cannot find chrome binary', 'no chrome binary',
+                'chrome binary not found'
+            )):
+                raise RuntimeError(
+                    'Google Chrome/Chromium bulunamadı. Windows’a Google Chrome '
+                    'kurup uygulamayı yeniden deneyin: https://www.google.com/chrome/'
+                ) from error
+            raise RuntimeError(
+                'Chrome/Chromium başlatılamadı. Google Chrome’un kurulu ve güncel '
+                'olduğunu, internet bağlantısının açık olduğunu kontrol edip '
+                f'uygulamayı yeniden deneyin. Ayrıntı: {details}'
+            ) from error
 
         try:
             # Google Maps'e git
@@ -415,7 +437,10 @@ class GoogleMapsScraper:
         self.observed_keys.add(observation_key)
 
         phone = result.get('phone')
-        if not phone:
+        category_key = normalize_location_key(result.get('category_label') or '')
+        if category_key and category_key in self.excluded_category_labels:
+            result['collection_status'] = 'excluded_category'
+        elif not phone:
             result['collection_status'] = 'no_mobile'
         elif phone in self.existing_phones:
             result['collection_status'] = 'duplicate_phone'

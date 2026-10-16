@@ -776,6 +776,13 @@
                 </div>
 
                 <div class="form-group">
+                    <label>Kayda alınmayacak kategori etiketleri</label>
+                    <p class="monitor-note">Seçilen etikete sahip işletmeler CSV'ye eklenmez. Etiketler önceki aramalarda görülen kategori etiketlerinden listelenir.</p>
+                    <div id="excludedCategoriesList" class="districts-grid"></div>
+                    <div id="excludedCategoriesEmpty" class="monitor-note" hidden>Henüz kategori etiketi bulunamadı. Önce bir arama yapıp etiketleri kaydedin.</div>
+                </div>
+
+                <div class="form-group">
                     <label for="maxResults">Maksimum Sonuç Sayısı</label>
                     <input type="number" id="maxResults" value="50" min="10" max="100">
                 </div>
@@ -895,6 +902,7 @@
             loadCities();
             loadTasks();
             loadKeywordsHistory();
+            loadCategoryLabels();
             setInterval(loadTasks, 2000);
         });
 
@@ -995,6 +1003,36 @@
             `).join('');
         }
 
+        async function loadCategoryLabels() {
+            const response = await fetch('/api/category-labels');
+            const data = await response.json();
+            const container = document.getElementById('excludedCategoriesList');
+            const empty = document.getElementById('excludedCategoriesEmpty');
+            const selectedLabels = new Set(Array.from(
+                container.querySelectorAll('.excluded-category-checkbox:checked'),
+                checkbox => checkbox.value
+            ));
+            const currentLabels = Array.from(
+                container.querySelectorAll('.excluded-category-checkbox'),
+                checkbox => checkbox.value
+            );
+            if (JSON.stringify(currentLabels) === JSON.stringify(data.labels)) {
+                return;
+            }
+            container.replaceChildren();
+            empty.hidden = data.labels.length > 0;
+            data.labels.forEach(labelText => {
+                const label = document.createElement('label');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = labelText;
+                checkbox.className = 'excluded-category-checkbox';
+                checkbox.checked = selectedLabels.has(labelText);
+                label.append(checkbox, document.createTextNode(` ${labelText}`));
+                container.appendChild(label);
+            });
+        }
+
         document.getElementById('historyKeywords').addEventListener('click', function(event) {
             const keyword = event.target.closest('[data-history-keyword]');
             if (keyword) {
@@ -1022,6 +1060,10 @@
             const city = document.getElementById('city').value;
             const maxResults = document.getElementById('maxResults').value;
             const outputFile = document.getElementById('outputFile').value;
+            const excludedCategoryLabels = Array.from(
+                document.querySelectorAll('.excluded-category-checkbox:checked'),
+                checkbox => checkbox.value
+            );
 
             // Seçili ilçeleri al
             const selectedDistricts = [];
@@ -1034,7 +1076,8 @@
                 search_keywords: keywords,
                 expand_search_queries: document.getElementById('expandSearchQueries').checked,
                 max_results: parseInt(maxResults),
-                cumulative_file: outputFile
+                cumulative_file: outputFile,
+                excluded_category_labels: excludedCategoryLabels
             };
 
             // Eğer ilçe seçildiyse, sadece seçili ilçeleri ara
@@ -1079,7 +1122,7 @@
                 }
                 const tasks = await response.json();
                 updateDashboard(tasks);
-
+                await loadCategoryLabels();
                 renderTaskList(tasks);
             } catch (error) {
                 document.getElementById('liveStatus').textContent = 'Bağlantı sorunu';
@@ -1496,7 +1539,8 @@
                 saved: 'CSV’ye eklendi',
                 no_mobile: 'Cep telefonu bulunamadı',
                 duplicate_phone: 'Telefon zaten kayıtlı',
-                limit_reached: 'Sonuç limiti doldu'
+                limit_reached: 'Sonuç limiti doldu',
+                excluded_category: 'Kategori etiketi seçildiği için atlandı'
             };
             card.root.dataset.status = result.collection_status || '';
             setTextIfChanged(card.name, result.name);

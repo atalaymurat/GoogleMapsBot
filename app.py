@@ -381,7 +381,8 @@ def task_worker():
                                     'saved': 'KAYDEDİLDİ',
                                     'no_mobile': 'CEP TELEFONU YOK',
                                     'duplicate_phone': 'TEKRAR TELEFON',
-                                    'limit_reached': 'SONUÇ LİMİTİ'
+                                    'limit_reached': 'SONUÇ LİMİTİ',
+                                    'excluded_category': 'KATEGORİ ETİKETİ NEDENİYLE ATLANDI'
                                 }
                                 phone_info = live_result['phone'] or 'cep telefonu bulunamadı'
                                 label = status_labels.get(
@@ -431,6 +432,9 @@ def task_worker():
                             on_result=report_live_result,
                             on_event=lambda event: report_terminal(
                                 event['message'], event.get('level', 'INFO')
+                            ),
+                            excluded_category_labels=task_data.get(
+                                'excluded_category_labels', []
                             )
                         )
                         result_count = scraper.scrape()
@@ -590,6 +594,19 @@ def create_task():
             for district in districts
         ))
 
+    excluded_category_labels = data.get('excluded_category_labels', [])
+    if (not isinstance(excluded_category_labels, list)
+            or not all(
+                isinstance(label, str) and label.strip()
+                for label in excluded_category_labels
+            )):
+        return jsonify({
+            'error': 'Hariç tutulacak kategori etiketleri metin listesi olmalı'
+        }), 400
+    excluded_category_labels = list(dict.fromkeys(
+        label.strip() for label in excluded_category_labels
+    ))
+
     task_data = {
         'city': city,
         'search_keywords': search_keywords,
@@ -597,7 +614,8 @@ def create_task():
         'expand_search_queries': expand_search_queries,
         'cumulative_file': cumulative_file,
         'max_results': max_results,
-        'districts': districts
+        'districts': districts,
+        'excluded_category_labels': excluded_category_labels
     }
 
     task_id = None
@@ -703,6 +721,19 @@ def get_keywords_history():
     """Anahtar kelime geçmişini al"""
     history = load_keywords_history()
     return jsonify({'keywords': history})
+
+
+@app.route('/api/category-labels', methods=['GET'])
+def get_category_labels():
+    """Return category labels observed in saved task history."""
+    labels = {}
+    with state_lock:
+        for task in tasks.values():
+            for label in task.get('category_counts', {}):
+                key = normalize_location_key(label)
+                if key:
+                    labels.setdefault(key, label)
+    return jsonify({'labels': sorted(labels.values(), key=str.casefold)})
 
 
 @app.route('/api/export', methods=['GET'])

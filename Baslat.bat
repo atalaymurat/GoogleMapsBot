@@ -51,6 +51,7 @@ echo.
 echo HATA: Uygulama baslatilamadi.
 echo Yapilacak: Yukaridaki hata mesajini kontrol edin. 5000 portu baska bir
 echo uygulama tarafindan kullaniliyorsa o uygulamayi kapatip yeniden deneyin.
-echo Bu klasorde yazma izni oldugunu ve Chrome'un kurulu oldugunu da kontrol edin.
+echo Tarama gorevi Chrome/Chromium bulunamadigi icin durduysa Google Chrome'u
+echo https://www.google.com/chrome/ adresinden kurun, sonra panelden aramayi yineleyin.
 pause
 exit /b 1
