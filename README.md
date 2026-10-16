@@ -67,6 +67,14 @@ py -m pip install -r requirements.txt
 
 ### 5. Web panelini başlatın
 
+Windows'ta en kolay yöntem proje klasöründeki `Baslat.bat` dosyasına çift
+tıklamaktır. İlk çalıştırmada sanal ortamı oluşturur ve gerekli paketleri
+kurar; sonraki çalıştırmalarda doğrudan uygulamayı açar. İlk kurulum için
+Python 3 ve internet bağlantısı gerekir. Uygulama açıkken bu pencereyi açık
+bırakın.
+
+Komut satırından elle başlatmak isterseniz:
+
 ```powershell
 py app.py
 ```

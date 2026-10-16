@@ -6,7 +6,6 @@ import os
 import json
 import logging
 import platform
-import shutil
 import subprocess
 import urllib.request
 from datetime import datetime
@@ -17,18 +16,9 @@ app = Flask(__name__, template_folder='templates')
 logger = logging.getLogger(__name__)
 state_lock = threading.RLock()
 APP_DIR = os.path.dirname(os.path.abspath(__file__))
-APP_DATA_DIR = os.path.join(
-    os.environ.get('LOCALAPPDATA', APP_DIR), 'GoogleMapsBot'
-)
-os.makedirs(APP_DATA_DIR, exist_ok=True)
-
-for data_filename in ('keywords_history.json', 'tasks_history.json',
-                      'google_contacts_cumulative.csv'):
-    source_path = os.path.join(APP_DIR, data_filename)
-    destination_path = os.path.join(APP_DATA_DIR, data_filename)
-    if (APP_DATA_DIR != APP_DIR and os.path.isfile(source_path)
-            and not os.path.exists(destination_path)):
-        shutil.copy2(source_path, destination_path)
+# App data and generated CSV files stay beside app.py, regardless of the
+# current working directory or the user's LOCALAPPDATA setting.
+APP_DATA_DIR = APP_DIR
 
 # Anahtar kelime geçmişi dosyası
 KEYWORDS_FILE = os.path.join(APP_DATA_DIR, 'keywords_history.json')
